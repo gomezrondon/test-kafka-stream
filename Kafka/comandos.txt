@@ -1,0 +1,14 @@
+#commond docker commands
+docker-compose up -d
+docker ps
+#to enter the container with kafka
+docker exec -it <container_id> bash
+
+#how to create a new topic
+kafka-topics.sh --create --topic my_topic --zookeeper zookeeper:2181 --replication-factor 1 --partitions 1
+#how to list all topic
+kafka-topics.sh --list --zookeeper zookeeper:2181
+#how to produce in to a topic
+kafka-console-producer.sh --broker-list localhost:9092 --topic my_topic
+#how to consume from a topic
+kafka-console-consumer.sh --zookeeper zookeeper:2181 --topic my_topic --from-beginning
