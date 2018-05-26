@@ -1,7 +1,8 @@
 package com.gomezrondon.kafka.testkafkastream;
 
-import org.apache.juli.logging.Log;
-import org.apache.juli.logging.LogFactory;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.SpringApplication;
@@ -64,49 +65,5 @@ public class TestKafkaStreamApplication implements ApplicationRunner {
 
 }
 
-interface AnalyticsBinding{
-
-	String PAGE_VIEWS_OUT = "pvout";
-
-	@Output(PAGE_VIEWS_OUT)
-	MessageChannel pageViewsOut();
 
 
-}
-
-
-class PageViewEvent{
-	private String userId;
-	private String page;
-	private long duration;
-
-	public PageViewEvent(String userId, String page, long duration) {
-		this.userId = userId;
-		this.page = page;
-		this.duration = duration;
-	}
-
-	public String getUserId() {
-		return userId;
-	}
-
-	public void setUserId(String userId) {
-		this.userId = userId;
-	}
-
-	public String getPage() {
-		return page;
-	}
-
-	public void setPage(String page) {
-		this.page = page;
-	}
-
-	public long getDuration() {
-		return duration;
-	}
-
-	public void setDuration(long duration) {
-		this.duration = duration;
-	}
-}
