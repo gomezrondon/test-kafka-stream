@@ -2,11 +2,15 @@ package com.gomezrondon.kafka.testkafkastream;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.kafka.streams.kstream.ForeachAction;
+import org.apache.kafka.streams.kstream.KStream;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.stream.annotation.EnableBinding;
+import org.springframework.cloud.stream.annotation.Input;
+import org.springframework.cloud.stream.annotation.StreamListener;
 import org.springframework.integration.support.MessageBuilder;
 import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.Message;
@@ -46,7 +50,7 @@ public class TestKafkaStreamApplication implements ApplicationRunner {
 					.build();
 			try {
 				this.pageViewsOut.send(message);
-				log.info(">>>>>>>>>>>>>>>>>>> Sent "+ message.getPayload());
+				log.info(">>> Sent "+ message.getPayload());
 			}catch (Exception e){
 				log.error(e);
 			}
@@ -54,6 +58,12 @@ public class TestKafkaStreamApplication implements ApplicationRunner {
 		};
 
 		Executors.newScheduledThreadPool(1).scheduleAtFixedRate(runnable, 1, 1, TimeUnit.SECONDS);
+	}
+
+	@StreamListener
+	public void process(@Input(AnalyticsBinding.PAGE_VIEWS_IN)KStream<String, PageViewEvent> evernt){
+
+		evernt.foreach((s, pageViewEvent) -> log.info("++++++ "+pageViewEvent.getPage()));
 	}
 
 	public static void main(String[] args) {

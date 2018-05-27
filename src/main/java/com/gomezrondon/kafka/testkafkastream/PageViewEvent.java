@@ -40,9 +40,12 @@ public class PageViewEvent  {
     }
 
 
-
-
-
-
-
+    @Override
+    public String toString() {
+        return "PageViewEvent{" +
+                "userId='" + userId + '\'' +
+                ", page='" + page + '\'' +
+                ", duration=" + duration +
+                '}';
+    }
 }
