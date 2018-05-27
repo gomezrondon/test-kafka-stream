@@ -2,12 +2,11 @@ server:
   port: 9998
 spring:
   application:
-    name: kafkalistener
+    name: kafka-producer
   cloud:
     stream:
       kafka:
         binder:
-          zkNodes: 192.168.99.100
           defaultZkPort: 2181
           brokers: 192.168.99.100
           defaultBrokerPort: 9092

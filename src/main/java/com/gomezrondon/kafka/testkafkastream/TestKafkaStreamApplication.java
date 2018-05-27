@@ -1,6 +1,5 @@
 package com.gomezrondon.kafka.testkafkastream;
 
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.boot.ApplicationArguments;
@@ -8,7 +7,6 @@ import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.stream.annotation.EnableBinding;
-import org.springframework.cloud.stream.annotation.Output;
 import org.springframework.integration.support.MessageBuilder;
 import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.Message;
@@ -48,7 +46,7 @@ public class TestKafkaStreamApplication implements ApplicationRunner {
 					.build();
 			try {
 				this.pageViewsOut.send(message);
-				log.info(">>>>>>>>>>>>>>>>>>> Sent "+ message.toString());
+				log.info(">>>>>>>>>>>>>>>>>>> Sent "+ message.getPayload());
 			}catch (Exception e){
 				log.error(e);
 			}
@@ -64,6 +62,3 @@ public class TestKafkaStreamApplication implements ApplicationRunner {
 
 
 }
-
-
-
