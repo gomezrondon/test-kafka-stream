@@ -1,14 +1,13 @@
 package com.gomezrondon.kafka.testkafkastream;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.kafka.streams.KeyValue;
-import org.apache.kafka.streams.kstream.ForeachAction;
 import org.apache.kafka.streams.kstream.KStream;
 import org.apache.kafka.streams.kstream.KTable;
 import org.apache.kafka.streams.kstream.Materialized;
-import org.apache.kafka.streams.kstream.TimeWindows;
-import org.apache.kafka.streams.kstream.Windowed;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.SpringApplication;
@@ -16,7 +15,6 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.stream.annotation.EnableBinding;
 import org.springframework.cloud.stream.annotation.Input;
 import org.springframework.cloud.stream.annotation.StreamListener;
-import org.springframework.cloud.stream.binder.kafka.streams.properties.KafkaStreamsApplicationSupportProperties;
 import org.springframework.integration.support.MessageBuilder;
 import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.Message;
@@ -24,6 +22,7 @@ import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.stereotype.Component;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
@@ -36,9 +35,11 @@ public class TestKafkaStreamApplication implements ApplicationRunner {
 
 	private Log log = LogFactory.getLog(getClass());
 	private final MessageChannel pageViewsOut;
+	private final ObjectMapper jsonMapper;
 
-	public TestKafkaStreamApplication(AnalyticsBinding binding) {
+	public TestKafkaStreamApplication(AnalyticsBinding binding, ObjectMapper jsonMapper) {
 		this.pageViewsOut = binding.pageViewsOut();
+		this.jsonMapper = jsonMapper;
 	}
 
 	@Override
@@ -52,8 +53,13 @@ public class TestKafkaStreamApplication implements ApplicationRunner {
 			String rName = names.get(new Random().nextInt(names.size()));
 
 			PageViewEvent bankTicketEvent = new PageViewEvent(rName, rOperation, Math.random() > .5 ? 10 : 1000);
-			Message<PageViewEvent> message = MessageBuilder
-					.withPayload(bankTicketEvent)
+
+			//************** convert to Json
+			String json = getObjToJson(bankTicketEvent);
+			//*******************************
+
+			Message<String> message = MessageBuilder
+					.withPayload(json)
 					.setHeader(KafkaHeaders.MESSAGE_KEY, bankTicketEvent.getUserId().getBytes())
 					.build();
 			try {
@@ -68,11 +74,32 @@ public class TestKafkaStreamApplication implements ApplicationRunner {
 		Executors.newScheduledThreadPool(1).scheduleAtFixedRate(runnable, 1, 1, TimeUnit.SECONDS);
 	}
 
+	private String getObjToJson(PageViewEvent bankTicketEvent) {
+		String json = "";
+		try {
+			json = jsonMapper.writeValueAsString(bankTicketEvent);
+		} catch (JsonProcessingException e) {
+			e.printStackTrace();
+		}
+		return json;
+	}
+
+	private PageViewEvent getJsonToObj(String value) {
+		//PageViewEvent obj = getJsonToObj(value);
+		PageViewEvent obj = null;
+		try {
+			obj = jsonMapper.readValue(value, PageViewEvent.class);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return obj;
+	}
+
 	@StreamListener
 	@SendTo(AnalyticsBinding.PAGE_COUNT_OUT)
-	public KStream<String, Long> process(@Input(AnalyticsBinding.PAGE_VIEWS_IN)KStream<String, PageViewEvent> evernt){
-         //test
-	// 	evernt.foreach((s, pageViewEvent) -> log.info("++++++ "+pageViewEvent.getPage()));
+	public KStream<String, Long> process(@Input(AnalyticsBinding.PAGE_VIEWS_IN)KStream<String, String> evernt){
+		//test
+		//evernt.foreach((s, str) -> log.info("++++++ "+str));
 
 /* an example
 		KTable<Windowed<String>, Long> KtableWindow = evernt
@@ -91,6 +118,7 @@ public class TestKafkaStreamApplication implements ApplicationRunner {
 */
 
 		return evernt // Stream of pages to counts
+				.mapValues(value -> getJsonToObj(value))
 				.filter((key, value) -> value.getDuration() > 10)
 				.map((key, value) -> new KeyValue<>(value.getPage(), "0"))
 				.groupByKey()

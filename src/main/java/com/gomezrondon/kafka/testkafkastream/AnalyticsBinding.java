@@ -16,7 +16,7 @@ public interface AnalyticsBinding{
 
     //Pages views
     @Input(PAGE_VIEWS_IN)
-    KStream<String, PageViewEvent> pageViewsIn();
+    KStream<String, String> pageViewsIn();
 
     @Output(PAGE_VIEWS_OUT)
     MessageChannel pageViewsOut();
